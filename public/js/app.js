@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const label = document.createElement('label');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.name = `question${index + 1}`;
-                    checkbox.value = cls;
+                    checkbox.name = `${imageID}_${cls}`;
+                    checkbox.value = 1;
                     label.appendChild(checkbox);
                     label.appendChild(document.createTextNode(` ${cls}`));
                     questionDiv.appendChild(label);
@@ -38,4 +38,21 @@ document.addEventListener('DOMContentLoaded', function() {
             surveyContainer.appendChild(submitButton);
         })
         .catch(error => console.error('Error fetching images:', error));
+});
+
+// Handle form submission
+document.getElementById('survey-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+    fetch('/submit-survey', {
+        method: 'POST',
+        body: new URLSearchParams(formData)
+    })
+    .then(response => response.text())
+    .then(message => {
+        alert(message); // Show submission notification
+        location.reload(); // Refresh the page
+    })
+    .catch(error => console.error('Error submitting survey:', error));
 });

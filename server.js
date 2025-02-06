@@ -7,8 +7,8 @@ const csv = require('csv-parser');
 const app = express();
 const port = 3000;
 
-// Middleware to parse JSON request bodies
-app.use(bodyParser.json());
+// Middleware to parse URL-encoded request bodies
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files (images, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -39,6 +39,36 @@ app.get('/random-images', (req, res) => {
             }
             res.json(selectedIDs);
         });
+});
+
+// Endpoint to handle form submissions
+app.post('/submit-survey', (req, res) => {
+    const data = req.body;
+    const imageIDs = {};
+
+    // Initialize the imageIDs object with default values
+    Object.keys(data).forEach(key => {
+        const [imageID, cls] = key.split('_');
+        if (!imageIDs[imageID]) {
+            imageIDs[imageID] = { Monitor: 0, Keyboard: 0, Mouse: 0, Computer: 0 };
+        }
+        imageIDs[imageID][cls] = data[key] === '1' ? 1 : 0;
+    });
+
+    // Prepare CSV rows
+    const csvRows = Object.entries(imageIDs).map(([imageID, classes]) => {
+        return `${imageID},${classes.Monitor},${classes.Keyboard},${classes.Mouse},${classes.Computer}`;
+    });
+
+    const csvData = csvRows.join('\n') + '\n';
+
+    fs.appendFile(path.join(__dirname, 'survey-results.csv'), csvData, (err) => {
+        if (err) {
+            console.error('Error writing to CSV file', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('Survey submitted successfully!');
+    });
 });
 
 // Start the server
